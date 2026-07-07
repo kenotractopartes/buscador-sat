@@ -441,6 +441,24 @@
   .asig-toolbar { margin:2px 0 10px; }
   .asig-aceptar { width:100%; padding:11px; border:none; border-radius:10px; background:var(--ok); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
   .asig-aceptar:hover { filter:brightness(1.05); }
+  /* DUPLICADOS */
+  .dup-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0; padding:8px 4px; border-top:1px solid var(--line-soft); }
+  .dup-bar #dupSelCount { font-size:13px; color:var(--muted); font-weight:600; }
+  .dup-del-sel { padding:9px 14px; border:none; border-radius:9px; background:var(--danger); color:#fff; font-weight:700; cursor:pointer; font-size:13.5px; }
+  .dup-del-sel:disabled { opacity:.4; cursor:default; }
+  .dup-group { border:1px solid var(--line); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+  .dup-ghead { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; background:var(--accent-2); border-bottom:1px solid var(--line-soft); }
+  .dup-gtitle { font-weight:700; font-size:14px; color:var(--accent-dark); }
+  .dup-gcount { font-size:12px; color:var(--muted); }
+  .dup-keep { padding:6px 10px; border:1px solid var(--line); background:var(--card); border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; color:var(--text); white-space:nowrap; }
+  .dup-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-bottom:1px solid var(--line-soft); }
+  .dup-row:last-child { border-bottom:none; }
+  .dup-row input[type=checkbox] { width:18px; height:18px; flex-shrink:0; cursor:pointer; }
+  .dup-info { flex:1; min-width:0; }
+  .dup-pieza { font-weight:600; font-size:13.5px; }
+  .dup-meta { font-size:11.5px; color:var(--muted-2); margin-top:1px; }
+  .dup-meta b { color:var(--muted); }
+  .dup-trash { padding:7px 10px; border:1px solid var(--danger-bg); background:var(--danger-bg); color:var(--danger); border-radius:8px; cursor:pointer; font-size:14px; }
 </style>
 </head>
 <body>
@@ -469,6 +487,7 @@
     <button class="tab" onclick="switchTab('add')">➕ Agregar</button>
     <button class="tab" onclick="switchTab('changes')">📝 Cambios</button>
     <button class="tab" onclick="switchTab('asignar')">🏷️ Asignar SAT</button>
+    <button class="tab" onclick="switchTab('duplicados')">🧹 Duplicados</button>
     <button class="tab" onclick="switchTab('import')">📥 Importar</button>
   </div>
 
@@ -569,6 +588,28 @@
         </div>
 
         <div id="asignarList" class="asig-list"></div>
+      </div>
+
+      <!-- DUPLICADOS TAB -->
+      <div id="duplicadosTab" class="card card-pad" style="display:none;">
+        <label class="search-label">Piezas duplicadas</label>
+        <p id="dupResumen" style="margin:0 0 12px; font-size:13px; color:var(--muted);">—</p>
+
+        <div class="asig-modo">
+          <button class="asig-modo-btn active" data-dup="exactas" onclick="setDupModo('exactas')">Mismas palabras</button>
+          <button class="asig-modo-btn" data-dup="parecidas" onclick="setDupModo('parecidas')">Parecidas (variantes)</button>
+        </div>
+
+        <p style="margin:12px 0 8px; font-size:12.5px; color:var(--muted);">
+          💡 Ojo: piezas con nombre igual pueden ser de <b>motores distintos</b>. Revisa la <b>FAMILIA</b> y el <b># INTERNO</b> antes de borrar.
+        </p>
+
+        <div class="dup-bar">
+          <span id="dupSelCount">0 seleccionadas</span>
+          <button class="dup-del-sel" onclick="borrarSeleccionadosDup()">🗑 Borrar seleccionadas</button>
+        </div>
+
+        <div id="dupList" class="asig-list"></div>
       </div>
 
       <!-- IMPORT TAB -->
@@ -797,6 +838,7 @@ function switchTab(tab) {
     el.classList.toggle('active', oc.includes(`'${tab}'`));
   });
   if (tab === 'asignar') renderAsignar();
+  if (tab === 'duplicados') renderDuplicados();
 }
 
 // ============================================================
@@ -1015,8 +1057,10 @@ const BASE_COUNT = BASE_DATA.filter(r => !isHeaderRow(r)).length;
 
 function getMergedData() {
   const merged = [];
+  const delSet = new Set(deletes);
   BASE_DATA.forEach((r, i) => {
     if (isHeaderRow(r)) return;              // salta encabezado, conserva índices reales
+    if (delSet.has(i)) return;               // pieza base eliminada
     merged.push({
       ...r,
       ...(edits[i] || {}),
@@ -1041,7 +1085,7 @@ function getMergedData() {
 function tieneSat(r) { return !!(r['# SAT'] && String(r['# SAT']).trim()); }
 
 function updateStats() {
-  document.getElementById('statTotal').textContent = BASE_COUNT + adds.length;
+  document.getElementById('statTotal').textContent = BASE_COUNT + adds.length - deletes.length;
   document.getElementById('statEdited').textContent = Object.keys(edits).length;
   document.getElementById('statAdded').textContent = adds.length;
   document.getElementById('statDeleted').textContent = deletes.length;
@@ -1059,10 +1103,18 @@ function updateStats() {
 }
 
 function renderChanges() {
-  const summary = `${Object.keys(edits).length} editadas, ${adds.length} agregadas`;
+  const summary = `${Object.keys(edits).length} editadas, ${adds.length} agregadas, ${deletes.length} eliminadas`;
   document.getElementById('changesSummary').textContent = summary;
 
   const changes = [];
+  deletes.forEach(idx => {
+    const r = BASE_DATA[idx];
+    if (!r) return;
+    changes.push({
+      key: 'd' + idx, type: 'deleted', delIdx: idx,
+      'PIEZA': r['PIEZA'], '# SAT': r['# SAT'], '# INTERNO': r['# INTERNO']
+    });
+  });
   Object.entries(edits).forEach(([idx, data]) => {
     changes.push({
       key: 'b' + idx,
@@ -1083,16 +1135,21 @@ function renderChanges() {
     });
   });
 
+  const etiqueta = t => t === 'added' ? '✚ AGREGADA' : t === 'deleted' ? '🗑 ELIMINADA' : '✏ EDITADA';
   document.getElementById('changesList').innerHTML = changes.map(it => `
     <div class="change-item ${it.type}">
       <div class="change-info">
-        <span class="change-type ${it.type}">${it.type === 'added' ? '✚ AGREGADA' : '✏ EDITADA'}</span>
+        <span class="change-type ${it.type}">${etiqueta(it.type)}</span>
         <div class="change-title">${escapeHtml(it['PIEZA'] || '—')}</div>
         <div class="change-meta">SAT: ${escapeHtml(it['# SAT'] || '—')} · # INTERNO: ${escapeHtml(it['# INTERNO'] || '—')}</div>
       </div>
       <div class="change-actions">
-        <button class="icon-btn" onclick="openEditModal('${it.key}')" title="Editar">✏</button>
-        ${it.type === 'added' ? `<button class="icon-btn" onclick="deleteAdd(${it.addIdx})" title="Eliminar" style="color:var(--danger);">🗑</button>` : `<button class="icon-btn" onclick="revertEditByKey('${it.key}')" title="Revertir" style="color:var(--warn);">↺</button>`}
+        ${it.type === 'deleted'
+          ? `<button class="icon-btn" onclick="restaurarBase(${it.delIdx})" title="Recuperar" style="color:var(--ok);">↺</button>`
+          : `<button class="icon-btn" onclick="openEditModal('${it.key}')" title="Editar">✏</button>` +
+            (it.type === 'added'
+              ? `<button class="icon-btn" onclick="deleteAdd(${it.addIdx})" title="Eliminar" style="color:var(--danger);">🗑</button>`
+              : `<button class="icon-btn" onclick="revertEditByKey('${it.key}')" title="Revertir" style="color:var(--warn);">↺</button>`)}
       </div>
     </div>
   `).join('');
@@ -1453,6 +1510,142 @@ function guardarSatEditar(key) {
   asigUnlocked.delete(key);
   toast('SAT actualizado ✅', 'success');
   renderAsignar();
+}
+
+// ============================================================
+// DUPLICADOS
+// ============================================================
+let dupModo = 'exactas';
+const dupSel = new Set();
+
+const DUP_CONNECT = new Set('DE LA EL PARA POR CON Y O DEL LOS LAS UN UNA A EN'.split(' '));
+const DUP_MODIF = new Set('USADO USADA USADOS USADAS NUEVO NUEVA NUEVOS NUEVAS RECON RECONS RECONSTRUIDO ORIGINAL COMPLETO COMPLETA DER DERECHO IZQ IZQUIERDO DELANTERO TRASERO'.split(' '));
+
+function dupSig(pieza) {
+  let t = normText(pieza).split(' ').filter(w => w && !DUP_CONNECT.has(w));
+  if (dupModo === 'parecidas') {
+    t = t.filter(w => !DUP_MODIF.has(w))
+         .map(w => (w.length > 3 && w.endsWith('S')) ? w.slice(0, -1) : w);
+    t = [...new Set(t)];
+  }
+  return t.sort().join(' ');
+}
+
+function setDupModo(m) {
+  dupModo = m;
+  dupSel.clear();
+  document.querySelectorAll('.asig-modo-btn[data-dup]').forEach(b => b.classList.toggle('active', b.dataset.dup === m));
+  renderDuplicados();
+}
+
+function renderDuplicados() {
+  const cont = document.getElementById('dupList');
+  if (!cont) return;
+  const merged = getMergedData();
+  const groups = {};
+  merged.forEach(r => {
+    const s = dupSig(r['PIEZA']);
+    if (!s) return;
+    (groups[s] = groups[s] || []).push(r);
+  });
+  const dups = Object.entries(groups).filter(([, v]) => v.length > 1)
+    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+
+  const totalExtra = dups.reduce((n, [, v]) => n + v.length - 1, 0);
+  document.getElementById('dupResumen').textContent =
+    `${dups.length} grupos de duplicados · ${totalExtra} piezas de más si conservas una de cada grupo.`;
+
+  if (!dups.length) { cont.innerHTML = '<div class="asig-empty">✅ No hay duplicados con este criterio.</div>'; updateDupSelCount(); return; }
+
+  cont.innerHTML = dups.map(([sig, items]) => {
+    const rows = items.map((r, n) => {
+      const key = keyDe(r);
+      const sat = r['# SAT'] || '—';
+      const checked = dupSel.has(key) ? 'checked' : '';
+      return `<div class="dup-row">
+        <input type="checkbox" ${checked} onchange="toggleDupSel('${key}', this.checked)">
+        <div class="dup-info">
+          <div class="dup-pieza">${escapeHtml(r['PIEZA'] || '—')}${n === 0 ? ' <span style="font-size:11px;color:var(--ok);font-weight:700;">(1ª)</span>' : ''}</div>
+          <div class="dup-meta"><b>${escapeHtml(r['# INTERNO'] || '—')}</b> · ${escapeHtml(r['FAMILIA'] || '—')} · SAT: ${escapeHtml(sat)}</div>
+        </div>
+        <button class="dup-trash" onclick="borrarPiezaDup('${key}')" title="Borrar esta">🗑</button>
+      </div>`;
+    }).join('');
+    return `<div class="dup-group">
+      <div class="dup-ghead">
+        <div><span class="dup-gtitle">${escapeHtml(items[0]['PIEZA'])}</span> <span class="dup-gcount">· ${items.length} iguales</span></div>
+        <button class="dup-keep" onclick="borrarGrupoDup('${encodeURIComponent(sig)}')">Conservar 1ª · borrar ${items.length - 1}</button>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+  updateDupSelCount();
+}
+
+function toggleDupSel(key, on) {
+  if (on) dupSel.add(key); else dupSel.delete(key);
+  updateDupSelCount();
+}
+function updateDupSelCount() {
+  const el = document.getElementById('dupSelCount');
+  if (el) el.textContent = `${dupSel.size} seleccionada${dupSel.size === 1 ? '' : 's'}`;
+  const btn = document.querySelector('.dup-del-sel');
+  if (btn) btn.disabled = dupSel.size === 0;
+}
+
+// Marca una pieza como eliminada (base -> deletes; agregada -> splice).
+function eliminarKey(key, silent) {
+  if (key[0] === 'b') {
+    const i = parseInt(key.slice(1));
+    if (!deletes.includes(i)) deletes.push(i);
+  } else if (key[0] === 'a') {
+    const i = parseInt(key.slice(1));
+    if (adds[i]) adds.splice(i, 1);
+  }
+  if (!silent) { persist(); updateStats(); autoSync(); }
+}
+
+function borrarPiezaDup(key) {
+  const r = getMergedData().find(x => keyDe(x) === key);
+  if (!confirm(`¿Borrar "${r ? r['PIEZA'] : ''}"?\nSe puede recuperar en la pestaña Cambios.`)) return;
+  eliminarKey(key);
+  dupSel.delete(key);
+  renderDuplicados();
+  toast('Pieza eliminada.', 'warn');
+}
+
+function borrarGrupoDup(sigEnc) {
+  const sig = decodeURIComponent(sigEnc);
+  const items = getMergedData().filter(r => dupSig(r['PIEZA']) === sig);
+  const aBorrar = items.slice(1);   // conserva la 1ª
+  if (!aBorrar.length) return;
+  if (!confirm(`Conservar "${items[0]['PIEZA']}" y borrar las otras ${aBorrar.length}?\nSe pueden recuperar en Cambios.`)) return;
+  // borrar agregadas por índice descendente para no correr los índices
+  const keys = aBorrar.map(keyDe);
+  keys.filter(k => k[0] === 'b').forEach(k => eliminarKey(k, true));
+  keys.filter(k => k[0] === 'a').map(k => parseInt(k.slice(1))).sort((x, y) => y - x).forEach(i => { if (adds[i]) adds.splice(i, 1); });
+  persist(); updateStats(); autoSync();
+  renderDuplicados();
+  toast(`${aBorrar.length} piezas eliminadas.`, 'warn');
+}
+
+function borrarSeleccionadosDup() {
+  if (!dupSel.size) return;
+  if (!confirm(`¿Borrar las ${dupSel.size} piezas seleccionadas?\nSe pueden recuperar en Cambios.`)) return;
+  const keys = [...dupSel];
+  keys.filter(k => k[0] === 'b').forEach(k => eliminarKey(k, true));
+  keys.filter(k => k[0] === 'a').map(k => parseInt(k.slice(1))).sort((x, y) => y - x).forEach(i => { if (adds[i]) adds.splice(i, 1); });
+  persist(); updateStats(); autoSync();
+  dupSel.clear();
+  renderDuplicados();
+  toast(`${keys.length} piezas eliminadas.`, 'warn');
+}
+
+// Recuperar una pieza base eliminada.
+function restaurarBase(idx) {
+  deletes = deletes.filter(d => d !== idx);
+  persist(); updateStats(); autoSync();
+  toast('Pieza recuperada.', 'success');
 }
 
 // ============================================================
