@@ -434,6 +434,13 @@
   .asig-lock { padding:8px 10px; border:1px solid var(--warn-line); background:var(--warn-bg); color:var(--warn); border-radius:9px; cursor:pointer; font-size:14px; }
   .asig-current { font-weight:700; color:var(--ok); font-size:14px; min-width:90px; text-align:right; }
   .asig-empty { text-align:center; padding:36px 12px; color:var(--muted); }
+  .asig-sug { margin-top:3px; font-size:11.5px; color:var(--muted); }
+  .asig-sug.hi { color:var(--ok); }
+  .asig-sug.lo { color:var(--warn); }
+  .asig-sug b { font-weight:700; }
+  .asig-toolbar { margin:2px 0 10px; }
+  .asig-aceptar { width:100%; padding:11px; border:none; border-radius:10px; background:var(--ok); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+  .asig-aceptar:hover { filter:brightness(1.05); }
 </style>
 </head>
 <body>
@@ -556,6 +563,10 @@
 
         <!-- Filtro por letra -->
         <div id="asignarLetras" class="asig-letras"></div>
+
+        <div class="asig-toolbar">
+          <button class="asig-aceptar" onclick="aceptarTodoSugerido()">✓ Aceptar sugeridos de este filtro (70%+)</button>
+        </div>
 
         <div id="asignarList" class="asig-list"></div>
       </div>
@@ -1249,6 +1260,10 @@ function toast(msg, type = '') {
   }, 2800);
 }
 
+// ------ Mapa de sugerencias de SAT (aprendido de la propia base) ------
+const SAT_SUG = {"BRAZO":{"c":"25171507","p":0.38},"LIMPIABRISAS":{"c":"25171507","p":0.6},"ESPEJOS":{"c":"25172604","p":0.75},"BASE":{"c":"26101700","p":0.35},"ESPEJO":{"c":"25172604","p":0.92},"RETROVISOR":{"c":"25172604","p":0.8},"CUARTO":{"c":"25172604","p":0.5},"PUERTAS":{"c":"25172200","p":1.0},"FLD":{"c":"25172606","p":0.43},"RADIADOR":{"c":"25174000","p":0.57},"SOPORTE":{"c":"25191704","p":0.35},"BUJE":{"c":"26101700","p":0.5},"CABINA":{"c":"25191704","p":0.28},"DIESEL":{"c":"26101700","p":0.52},"TANQUE":{"c":"25172406","p":0.21},"FREIGHTLINER":{"c":"25172900","p":0.33},"POSTENFRIADOR":{"c":"25174000","p":0.5},"ELECTRONICO":{"c":"26101700","p":0.67},"PEDAL":{"c":"25173900","p":0.67},"AIRE":{"c":"25171700","p":0.38},"COFRE":{"c":"25172606","p":0.65},"PILOTO":{"c":"25174600","p":0.33},"COLUMBIA":{"c":"25172000","p":0.4},"RECUPERADOR":{"c":"40101719","p":1.0},"AGUA":{"c":"26101700","p":0.74},"FARO":{"c":"25172900","p":0.83},"IZQ":{"c":"25172900","p":0.57},"LADO":{"c":"25172900","p":0.33},"COMPLETO":{"c":"26101700","p":0.4},"DER":{"c":"25172900","p":0.5},"PARRILLA":{"c":"25172600","p":0.67},"TABLERO":{"c":"25172608","p":0.8},"DEFENSA":{"c":"25172606","p":0.55},"MOTOR":{"c":"26101700","p":0.49},"TIPO":{"c":"26101700","p":0.25},"BISEL":{"c":"25172900","p":0.67},"CENTRAL":{"c":"25172606","p":0.67},"CASCADIA":{"c":"25172606","p":1.0},"LATERAL":{"c":"25172606","p":0.5},"ESTRIBO":{"c":"25172600","p":0.5},"TRASERO":{"c":"25173800","p":0.31},"PLAFON":{"c":"25172900","p":0.75},"AMORTIGUADOR":{"c":"25181607","p":0.43},"VALVULA":{"c":"26101700","p":0.5},"JUEGO":{"c":"26101700","p":0.75},"INTERNACIONAL":{"c":"25172900","p":0.3},"FALDON":{"c":"25172600","p":0.33},"BAYONETA":{"c":"26101700","p":0.75},"TAPA":{"c":"26101700","p":0.59},"PROSTAR":{"c":"25172604","p":0.4},"DIRECCIONAL":{"c":"25172900","p":0.75},"MODULO":{"c":"26101700","p":0.25},"PUENTE":{"c":"25174000","p":0.36},"PUERTA":{"c":"25172200","p":1.0},"ASIENTO":{"c":"25174600","p":0.67},"ENFRIADOR":{"c":"26101700","p":0.76},"INTER":{"c":"25173800","p":0.7},"BATERIAS":{"c":"25173900","p":0.6},"ABANICO":{"c":"25174001","p":1.0},"CHASIS":{"c":"25181602","p":0.67},"QUE":{"c":"25172600","p":1.0},"KENWORTH":{"c":"25181607","p":0.5},"CLIMA":{"c":"26101700","p":0.5},"GRANDE":{"c":"25191700","p":0.33},"CAJA":{"c":"26101700","p":0.44},"BOLSAS":{"c":"25173811","p":0.33},"CUBRE":{"c":"25172606","p":0.75},"SECADOR":{"c":"25174000","p":0.67},"CAMAROTE":{"c":"25172200","p":0.67},"MOLDURA":{"c":"25172600","p":1.0},"SUPERIOR":{"c":"26101700","p":0.93},"INFERIOR":{"c":"26101700","p":0.67},"BARRA":{"c":"25173800","p":0.55},"FRENO":{"c":"26101700","p":0.62},"VOLVO":{"c":"25181607","p":0.17},"COMPLETA":{"c":"25172200","p":0.25},"ANTICONGELANTE":{"c":"40101719","p":0.33},"FILTRO":{"c":"40161500","p":0.82},"PORTA":{"c":"25173800","p":0.57},"CARTER":{"c":"26101700","p":1.0},"LEVAS":{"c":"26101903","p":0.71},"ARBOL":{"c":"26101903","p":0.48},"RECON":{"c":"26101700","p":0.55},"BIELAS":{"c":"25174200","p":0.6},"ACEITE":{"c":"26101700","p":0.69},"BOMBA":{"c":"26101700","p":0.93},"HIDRAULICO":{"c":"26101700","p":0.75},"CAM":{"c":"26101700","p":0.5},"BIG":{"c":"26101749","p":0.6},"INYECCION":{"c":"26101700","p":1.0},"CABEZA":{"c":"25102106","p":0.62},"TERMOSTATOS":{"c":"26101700","p":0.8},"CAMISA":{"c":"26101700","p":1.0},"CAMPANA":{"c":"26101700","p":0.56},"VIEJO":{"c":"26101700","p":1.0},"TRASERA":{"c":"25173800","p":0.45},"DELANTERA":{"c":"25172000","p":0.54},"ALUMINIO":{"c":"26101700","p":0.6},"CIGUENAL":{"c":"26101749","p":0.59},"STD":{"c":"26101749","p":0.67},"COMPRESOR":{"c":"26101700","p":0.61},"EMPAQUE":{"c":"26101700","p":0.93},"EMPAQUES":{"c":"26101700","p":1.0},"COMPRESORA":{"c":"25171700","p":0.83},"INYECTORES":{"c":"26101740","p":0.6},"CAMBIO":{"c":"26101740","p":0.5},"LIGAS":{"c":"26101700","p":0.9},"REPARACION":{"c":"26101700","p":0.91},"KIT":{"c":"25191700","p":0.67},"PISTON":{"c":"26101736","p":0.46},"MEDIA":{"c":"26101700","p":1.0},"METALES":{"c":"26101700","p":1.0},"BANCADA":{"c":"26101700","p":1.0},"BIELA":{"c":"26101700","p":0.94},"FANCLUTCH":{"c":"26101700","p":0.82},"TURBO":{"c":"26101700","p":0.91},"MANIFUL":{"c":"26101700","p":1.0},"INYECTOR":{"c":"26101700","p":0.64},"CADA":{"c":"26101700","p":1.0},"DISTRIBUCION":{"c":"26101700","p":0.78},"PLACA":{"c":"26101700","p":0.67},"BALANCIN":{"c":"26101700","p":1.0},"ADMISION":{"c":"26101700","p":0.81},"FUERZA":{"c":"26101700","p":0.5},"TOMA":{"c":"26101700","p":0.55},"MONOBLOCK":{"c":"26101700","p":1.0},"MANGUERA":{"c":"26101700","p":0.56},"TERMOSTATO":{"c":"26101700","p":1.0},"ESCAPE":{"c":"26101700","p":0.9},"BLOCK":{"c":"26101700","p":1.0},"PUNTERIAS":{"c":"26101700","p":1.0},"CUERNO":{"c":"26101700","p":0.5},"TRANSFERENCIA":{"c":"25173800","p":0.5},"PUNTERIA":{"c":"26101700","p":1.0},"III":{"c":"26101700","p":0.78},"JGO":{"c":"26101700","p":1.0},"CONJUNTO":{"c":"26101700","p":1.0},"ANILLOS":{"c":"26101700","p":1.0},"CARTERA":{"c":"26101700","p":1.0},"RECONSTRUIDO":{"c":"26101504","p":0.67},"PERNO":{"c":"26101700","p":0.8},"RETEN":{"c":"26101700","p":0.53},"POLEA":{"c":"26101700","p":0.56},"NUEVOS":{"c":"26101700","p":1.0},"NUEVAS":{"c":"26101700","p":1.0},"VALVULAS":{"c":"26101700","p":1.0},"MANGAS":{"c":"26101700","p":1.0},"BUJES":{"c":"26101700","p":1.0},"COMBUSTIBLE":{"c":"26101700","p":0.67},"RECONSTRUIDA":{"c":"25102106","p":0.89},"COMPUTADORA":{"c":"26101700","p":0.6},"HIDRAULICA":{"c":"26101700","p":0.6},"CAT":{"c":"26101700","p":1.0},"C15":{"c":"26101700","p":1.0},"LIGA":{"c":"26101700","p":0.88},"SENSORES":{"c":"26121704","p":1.0},"ARNES":{"c":"26121704","p":0.68},"SEPARADOR":{"c":"26101700","p":0.2},"ALTERNADOR":{"c":"26101700","p":1.0},"METAL":{"c":"26101700","p":1.0},"ENGRANE":{"c":"26101700","p":0.44},"TORNILLO":{"c":"26101700","p":0.82},"LLENADO":{"c":"25171700","p":0.25},"TUBO":{"c":"26101700","p":0.45},"DDEC":{"c":"26101700","p":0.69},"S60":{"c":"26101700","p":0.9},"USADAS":{"c":"26101700","p":0.6},"SERIE":{"c":"26101700","p":0.5},"DAMPER":{"c":"26101700","p":1.0},"PISTONES":{"c":"26101700","p":0.75},"PERICO":{"c":"26101700","p":1.0},"DELANTERO":{"c":"25173800","p":0.33},"VOLANTE":{"c":"26101700","p":0.8},"DETROIT":{"c":"26101700","p":1.0},"EGR":{"c":"26101700","p":0.5},"REPUESTO":{"c":"26101700","p":0.57},"GASES":{"c":"26101700","p":0.75},"CLUTCH":{"c":"26101700","p":0.44},"FAN":{"c":"26101700","p":1.0},"HORTON":{"c":"26101700","p":1.0},"SENSOR":{"c":"26101700","p":0.91},"AUMENTO":{"c":"26101700","p":0.67},"CODO":{"c":"26101700","p":0.67},"FABRICANTE":{"c":"26101700","p":0.67},"PASO":{"c":"26101749","p":0.42},"COPLE":{"c":"26101700","p":0.67},"CASCO":{"c":"25173800","p":0.5},"TENSORA":{"c":"25171700","p":0.33},"VARILLA":{"c":"25171700","p":0.33},"ISC":{"c":"26101700","p":0.5},"LOCA":{"c":"26101700","p":0.5},"SALIDA":{"c":"26101700","p":0.33},"ACTUADOR":{"c":"26101749","p":0.75},"BOBINA":{"c":"26101700","p":0.6},"PRESION":{"c":"26101700","p":1.0},"TEMPERATURA":{"c":"26101700","p":1.0},"ELECTRICA":{"c":"26101700","p":0.75},"ISX":{"c":"26101700","p":0.73},"MAYOR":{"c":"26101749","p":0.67},"MASTER":{"c":"26101749","p":0.67},"CAPUCHON":{"c":"25173800","p":0.43},"BALERO":{"c":"25173800","p":0.67},"CRUZETA":{"c":"25173800","p":0.6},"MASA":{"c":"25173800","p":0.88},"DIRECCION":{"c":"25174200","p":0.77},"BALEROS":{"c":"25173800","p":0.67},"CONEXION":{"c":"26101749","p":0.67},"BRONCE":{"c":"25173800","p":0.5},"MECANICO":{"c":"26101700","p":0.5},"CELECT":{"c":"26101700","p":0.4},"PLUS":{"c":"26101700","p":0.67},"M11":{"c":"26101700","p":0.67},"NAVISTAR":{"c":"26101700","p":0.85},"DIFERENCIAL":{"c":"25173800","p":0.71},"TRANSMISION":{"c":"25173812","p":0.49},"CARDAN":{"c":"25173800","p":0.75},"SATELITES":{"c":"25173800","p":1.0},"PINON":{"c":"25173800","p":0.71},"CORONA":{"c":"25173800","p":0.67},"MOLOTE":{"c":"25173800","p":1.0},"ROCKWELL":{"c":"25173800","p":0.71},"HUASA":{"c":"25173800","p":1.0},"SUSPENSION":{"c":"25172000","p":0.44},"TUERCA":{"c":"25173800","p":0.67},"YUGO":{"c":"25173800","p":1.0},"PERCHA":{"c":"25172000","p":1.0},"MANCUERNA":{"c":"25173811","p":1.0},"LIBRAS":{"c":"25173800","p":0.56},"MANGO":{"c":"25174200","p":0.5},"MUELLE":{"c":"25172000","p":0.75},"PEINE":{"c":"25172000","p":1.0},"UNIMONT":{"c":"25171903","p":0.33},"RIN":{"c":"25171903","p":1.0},"EJE":{"c":"25173801","p":0.5},"EATON":{"c":"25173800","p":0.8},"SPICER":{"c":"25173800","p":0.6},"FLECHA":{"c":"25173800","p":1.0},"DUAL":{"c":"25173800","p":1.0},"UNEMON":{"c":"25173800","p":0.75},"BASTON":{"c":"25173800","p":1.0},"VEL":{"c":"25173800","p":0.44},"FULLER":{"c":"25173812","p":0.43},"PINA":{"c":"25191700","p":0.67},"TRANS":{"c":"25191700","p":0.67},"SINCRONIZADOR":{"c":"25173800","p":0.75},"RTLO":{"c":"25173812","p":1.0},"AMERICAN":{"c":"25191700","p":0.86},"WORLD":{"c":"25191700","p":0.86}};
+const SAT_DESC = {"25172604":"Espejos retrovisores","26101700":"Accesorios y componentes de motor","25172608":"Tableros","25171700":"Sistemas de frenado y componentes","25174001":"Ventilador","26101903":"Árbol de distribución","25172200":"Puertas para vehículos","25171507":"Cuchillas limpiadoras","25172000":"Componentes de sistema de suspensión","25172600":"Acabados y revestimientos exterior para vehículos","25172606":"Capós de vehículos","25102106":"Cabezote","25171903":"Rines o ruedas para camiones","25173811":"Ejes de tracción","25174000":"Sistema de refrigerar de motor","25191700":"Equipo para el mantenimiento de vehículo","25172406":"Tanques de combustible","25191704":"Pedestales de vehículo o motor","25172900":"Iluminación exterior para vehículos","26101736":"Pistones","25181602":"Chasis para camiones","40101719":"Receptor de líquido refrigerante","26101740":"Inyectores de combustible","25174200":"Sistema de dirección","25173812":"Transmisiones manuales","40161500":"Filtros","26121704":"Arnés de alambrado especial","25181607":"Cabina de tractor","26101504":"Motores diesel","26101749":"Cigüeñal","25173800":"Sistemas de tren de transmisión","25173801":"Ejes de manejo","25174600":"Sistemas de asientos del vehículo","25173900":"Componentes eléctricos"};
+
 // ============================================================
 // ASIGNAR SAT (mesa de trabajo)
 // ============================================================
@@ -1257,6 +1272,19 @@ let asigLetra = null;       // 'A'..'Z' | '#' | null (todas)
 const asigUnlocked = new Set();
 
 function keyDe(r) { return r._origin === 'base' ? 'b' + r._baseIdx : 'a' + r._addIdx; }
+
+let asigActual = [];   // filas mostradas (para "aceptar todo")
+
+// Sugiere un código SAT según las palabras de la pieza (aprendido de tu propia base).
+function sugerirSat(pieza) {
+  const words = new Set(normText(pieza).split(' ').filter(w => w.length >= 3));
+  let best = null;
+  words.forEach(w => {
+    const s = SAT_SUG[w];
+    if (s && (!best || s.p > best.p)) best = { c: s.c, p: s.p, w: w };
+  });
+  return best;
+}
 
 function populateAsignarFamilias() {
   const sel = document.getElementById('asignarFamilia');
@@ -1319,6 +1347,7 @@ function renderAsignar() {
   lista.sort((a, b) => normText(a['PIEZA']).localeCompare(normText(b['PIEZA'])));
 
   const CAP = 500, total = lista.length, shown = lista.slice(0, CAP);
+  asigActual = [];
 
   if (!total) {
     cont.innerHTML = '<div class="asig-empty">✅ No hay piezas en este filtro.</div>';
@@ -1329,20 +1358,28 @@ function renderAsignar() {
       const unlocked = asigUnlocked.has(key);
       const sat = escapeHtml(r['# SAT'] || '');
       const meta = [r['# INTERNO'], r['FAMILIA'], r['CATEGORÍA']].filter(Boolean).map(escapeHtml).join(' · ');
-      let field;
+      const sug = hasSat ? null : sugerirSat(r['PIEZA']);
+      asigActual.push({ key: key, hasSat: hasSat, sug: sug });
+      let field, sugHtml = '';
       if (hasSat && !unlocked) {
         field = `<span class="asig-current">${sat}</span>
                  <button class="asig-lock" onclick="desbloquearSat('${key}')" title="Cambiar SAT (doble candado)">🔒</button>`;
       } else {
         const saveFn = hasSat ? 'guardarSatEditar' : 'guardarSatRow';
-        field = `<input id="sat-inp-${key}" type="text" inputmode="numeric" value="${sat}" placeholder="# SAT"
+        const prefill = hasSat ? sat : (sug ? escapeHtml(sug.c) : '');
+        field = `<input id="sat-inp-${key}" type="text" inputmode="numeric" value="${prefill}" placeholder="# SAT"
                    onkeydown="if(event.key==='Enter'){${saveFn}('${key}')}">
                  <button class="asig-save" onclick="${saveFn}('${key}')">✓</button>`;
+        if (sug) {
+          const d = escapeHtml((SAT_DESC[sug.c] || '').slice(0, 32));
+          sugHtml = `<div class="asig-sug ${sug.p >= 0.7 ? 'hi' : 'lo'}">💡 sugerido: <b>${escapeHtml(sug.c)}</b> · ${d} · ${Math.round(sug.p * 100)}%</div>`;
+        }
       }
       return `<div class="asig-row" id="sat-row-${key}">
         <div class="asig-info">
           <div class="asig-pieza">${escapeHtml(r['PIEZA'] || '—')}</div>
           <div class="asig-meta">${meta}</div>
+          ${sugHtml}
         </div>
         <div class="asig-field">${field}</div>
       </div>`;
@@ -1351,14 +1388,25 @@ function renderAsignar() {
   updateProgreso(total);
 }
 
+// Aplica de golpe todas las sugerencias confiables (70%+) del filtro actual.
+function aceptarTodoSugerido() {
+  const target = asigActual.filter(x => !x.hasSat && x.sug && x.sug.p >= 0.7);
+  if (!target.length) { toast('No hay sugerencias confiables (70%+) en este filtro.', 'warn'); return; }
+  if (!confirm(`Aplicar ${target.length} códigos SAT sugeridos (confianza 70%+)?\nSe basan en tu propia base. Podrás cambiar cualquiera después con doble candado.`)) return;
+  target.forEach(x => applySat(x.key, x.sug.c, true));
+  persist(); updateStats(); autoSync();
+  toast(`${target.length} códigos asignados ✅`, 'success');
+  renderAsignar();
+}
+
 function updateProgreso(filtro) {
   const sin = getMergedData().filter(r => !tieneSat(r)).length;
   const el = document.getElementById('asignarProgreso');
   if (el) el.textContent = `Faltan ${sin} piezas sin SAT en total` + (filtro != null ? ` · ${filtro} en este filtro` : '');
 }
 
-// Aplica el SAT a una pieza (base o agregada) y sincroniza.
-function applySat(key, v) {
+// Aplica el SAT a una pieza (base o agregada). silent=true → no sincroniza (para lotes).
+function applySat(key, v, silent) {
   if (key[0] === 'b') {
     const i = parseInt(key.slice(1));
     edits[i] = Object.assign({}, edits[i], { '# SAT': v });
@@ -1366,9 +1414,7 @@ function applySat(key, v) {
     const i = parseInt(key.slice(1));
     if (adds[i]) adds[i]['# SAT'] = v;
   }
-  persist();
-  updateStats();
-  autoSync();
+  if (!silent) { persist(); updateStats(); autoSync(); }
 }
 
 // Guardar SAT en pieza SIN número (captura rápida: sin confirmación).
