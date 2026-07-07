@@ -670,9 +670,16 @@ function conectarFirebase() {
     if (!data) { subirAFirebase(); return; }            // nube vacía → sube lo local
     // Ignora el eco de nuestro propio guardado
     if (data.lastWriteBy === DEVICE_ID && data.writeId === ultimoWriteId) return;
-    edits = data.edits || {};
-    adds = data.adds || [];
-    deletes = data.deletes || [];
+    // Los cambios vienen como texto JSON (ver subirAFirebase). Compat con formato viejo.
+    let payload = {};
+    if (typeof data.data === 'string') {
+      try { payload = JSON.parse(data.data); } catch (e) { payload = {}; }
+    } else {
+      payload = data;   // formato viejo (por si quedó algo)
+    }
+    edits = payload.edits || {};
+    adds = payload.adds || [];
+    deletes = payload.deletes || [];
     persist();
     updateStats();
     renderChanges();
@@ -686,17 +693,21 @@ function conectarFirebase() {
 }
 
 // Sube el estado completo de cambios a la nube.
+// OJO: se guarda como TEXTO (JSON string) porque las columnas "# SAT" y
+// "# INTERNO" traen "#", y Firebase NO permite "#" en nombres de campo.
+// Metido dentro de un string, el "#" ya no molesta.
 function subirAFirebase() {
   if (!firebaseListo) return;
   ultimoWriteId = Date.now() + '_' + Math.random().toString(36).slice(2, 6);
   fbRef.set({
-    edits, adds, deletes,
+    data: JSON.stringify({ edits, adds, deletes }),
     lastWriteBy: DEVICE_ID,
     writeId: ultimoWriteId,
     updatedAt: new Date().toISOString()
   }).catch(err => {
     console.error('Firebase write error:', err);
     setSyncStatus('error', 'Error al guardar');
+    toast('Error al guardar en la nube: ' + err.message, 'error');
   });
 }
 
