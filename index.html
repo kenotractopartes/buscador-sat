@@ -462,6 +462,65 @@
 </style>
 </head>
 <body>
+<!-- 🔒 CANDADO DE ACCESO (contraseña compartida) -->
+<div id="authGate">
+  <div class="auth-card">
+    <div class="auth-emoji">🔒</div>
+    <div class="auth-title">Tracto Partes Magaña</div>
+    <div class="auth-sub">Escribe la contraseña para entrar</div>
+    <input type="password" id="authPass" placeholder="Contraseña" autocomplete="current-password" autofocus>
+    <label class="auth-rem"><input type="checkbox" id="authRemember" checked> Recordar en esta computadora</label>
+    <button id="authBtn">Entrar</button>
+    <div id="authErr"></div>
+  </div>
+</div>
+<style>
+  #authGate{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#0d2136,#0b1f33);padding:20px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;}
+  #authGate .auth-card{background:#fff;border-radius:18px;padding:32px 28px;max-width:360px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center;}
+  #authGate .auth-emoji{font-size:42px;}
+  #authGate .auth-title{font-size:20px;font-weight:800;color:#0f1f33;letter-spacing:-.3px;margin-top:4px;}
+  #authGate .auth-sub{font-size:14px;color:#5a6a7d;margin:6px 0 20px;}
+  #authGate input[type=password]{width:100%;padding:13px 14px;border:1.5px solid #c8d2dd;border-radius:11px;font-size:16px;outline:none;box-sizing:border-box;}
+  #authGate input[type=password]:focus{border-color:#0b4f8a;}
+  #authGate .auth-rem{display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:#5a6a7d;margin:14px 0;cursor:pointer;}
+  #authGate button{width:100%;padding:13px;border:none;border-radius:11px;background:#0b4f8a;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #authGate button:hover{background:#073962;}
+  #authGate #authErr{color:#a31515;font-size:13.5px;font-weight:600;margin-top:12px;min-height:18px;}
+  #authGate.shake .auth-card{animation:authShake .35s;}
+  @keyframes authShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+</style>
+<script>
+(function(){
+  var HASH='6aa84700ec9304636e7926449bdb4b280319464762505c677fa6f476b62cb3ba';
+  var KEY='tpm_acceso';
+  function abrir(){var g=document.getElementById('authGate');if(g&&g.parentNode)g.parentNode.removeChild(g);
+    try{document.documentElement.style.overflow='';document.body.style.overflow='';}catch(e){}}
+  try{ if(localStorage.getItem(KEY)===HASH||sessionStorage.getItem(KEY)===HASH){abrir();return;} }catch(e){}
+  try{document.documentElement.style.overflow='hidden';}catch(e){}
+  async function sha(s){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
+  function wire(){
+    var inp=document.getElementById('authPass'),btn=document.getElementById('authBtn'),
+        err=document.getElementById('authErr'),rem=document.getElementById('authRemember'),g=document.getElementById('authGate');
+    if(!inp||!btn){setTimeout(wire,30);return;}
+    async function probar(){
+      var h;
+      try{h=await sha(inp.value);}catch(e){err.textContent='Ábrelo desde el link (https), no como archivo.';return;}
+      if(h===HASH){try{(rem.checked?localStorage:sessionStorage).setItem(KEY,HASH);}catch(e){}abrir();}
+      else{err.textContent='Contraseña incorrecta';inp.value='';inp.focus();
+        g.classList.add('shake');setTimeout(function(){g.classList.remove('shake');},350);}
+    }
+    btn.onclick=probar;
+    inp.addEventListener('keydown',function(e){if(e.key==='Enter')probar();});
+    inp.focus();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
+})();
+</script>
+
 
 <div class="wrap">
   <!-- HERO -->
