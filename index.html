@@ -8,6 +8,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="tma-edicion-privada.js?v=20261106-1"></script>
 <style>
   :root {
     --bg: #f5f7fa;
@@ -582,27 +584,27 @@
         <label class="search-label">Agregar nueva pieza</label>
         <div class="form-group">
           <label>Categoría</label>
-          <select id="addCategory" style="width:100%; padding: 11px 12px; border: 1.5px solid #c8d2dd; border-radius: 10px; font-size: 14px;">
+          <select data-tma-editar id="addCategory" style="width:100%; padding: 11px 12px; border: 1.5px solid #c8d2dd; border-radius: 10px; font-size: 14px;">
             <option value="">— Seleccionar —</option>
           </select>
         </div>
         <div class="form-group">
           <label>Familia</label>
-          <input type="text" id="addFamily" placeholder="Ej: MOTOR" />
+          <input data-tma-editar type="text" id="addFamily" placeholder="Ej: MOTOR" />
         </div>
         <div class="form-group">
           <label># Interno (opcional)</label>
-          <input type="text" id="addInterno" placeholder="Generado automáticamente" />
+          <input data-tma-editar type="text" id="addInterno" placeholder="Generado automáticamente" />
         </div>
         <div class="form-group">
           <label>Pieza *</label>
-          <input type="text" id="addPieza" placeholder="Nombre de la pieza" />
+          <input data-tma-editar type="text" id="addPieza" placeholder="Nombre de la pieza" />
         </div>
         <div class="form-group">
           <label># SAT (opcional)</label>
-          <input type="text" id="addSAT" placeholder="Número SAT" />
+          <input data-tma-editar type="text" id="addSAT" placeholder="Número SAT" />
         </div>
-        <button onclick="submitAdd()" style="margin-top: 14px; width: 100%;">Agregar pieza</button>
+        <button data-tma-editar onclick="submitAdd()" style="margin-top: 14px; width: 100%;">Agregar pieza</button>
       </div>
 
       <!-- CHANGES TAB -->
@@ -613,8 +615,8 @@
             <p style="margin: 0; font-size: 13px; color: var(--muted);" id="changesSummary">Cargando...</p>
           </div>
           <div style="display: flex; gap: 8px;">
-            <button class="small" onclick="syncNow()" id="syncBtn">⚡ Sync</button>
-            <button class="small danger" onclick="confirmResetAll()">Limpiar</button>
+            <button data-tma-editar class="small" onclick="syncNow()" id="syncBtn">⚡ Sync</button>
+            <button data-tma-editar class="small danger" onclick="confirmResetAll()">Limpiar</button>
           </div>
         </div>
         <div id="changesList"></div>
@@ -644,7 +646,7 @@
         <div id="asignarLetras" class="asig-letras"></div>
 
         <div class="asig-toolbar">
-          <button class="asig-aceptar" onclick="aceptarTodoSugerido()">✓ Aceptar sugeridos de este filtro (70%+)</button>
+          <button data-tma-editar class="asig-aceptar" onclick="aceptarTodoSugerido()">✓ Aceptar sugeridos de este filtro (70%+)</button>
         </div>
 
         <div id="asignarList" class="asig-list"></div>
@@ -666,7 +668,7 @@
 
         <div class="dup-bar">
           <span id="dupSelCount">0 seleccionadas</span>
-          <button class="dup-del-sel" onclick="borrarSeleccionadosDup()">🗑 Borrar seleccionadas</button>
+          <button data-tma-editar class="dup-del-sel" onclick="borrarSeleccionadosDup()">🗑 Borrar seleccionadas</button>
         </div>
 
         <div id="dupList" class="asig-list"></div>
@@ -675,8 +677,8 @@
       <!-- IMPORT TAB -->
       <div id="importTab" class="card card-pad" style="display:none;">
         <label class="search-label">Importar cambios desde JSON o CSV</label>
-        <input type="file" id="importFile" accept=".json,.csv" style="margin-bottom: 14px;" />
-        <button onclick="loadBackup()" style="width: 100%; margin-bottom: 14px;">📂 Seleccionar archivo</button>
+        <input data-tma-editar type="file" id="importFile" accept=".json,.csv" style="margin-bottom: 14px;" />
+        <button data-tma-editar onclick="loadBackup()" style="width: 100%; margin-bottom: 14px;">📂 Seleccionar archivo</button>
         <button onclick="exportChanges('json')" class="secondary" style="width: 100%; margin-bottom: 8px;">💾 Descargar cambios (JSON)</button>
         <button onclick="exportAll('csv')" class="secondary" style="width: 100%; margin-bottom: 8px;">📊 Descargar base (CSV)</button>
         <button onclick="exportAll('xlsx')" class="secondary" style="width: 100%;">📈 Descargar base (Excel)</button>
@@ -723,32 +725,32 @@
     <div class="modal-body">
       <div class="form-group">
         <label>Categoría</label>
-        <input type="text" id="editCategory" />
+        <input data-tma-editar type="text" id="editCategory" />
       </div>
       <div class="form-group">
         <label>Familia</label>
-        <input type="text" id="editFamily" />
+        <input data-tma-editar type="text" id="editFamily" />
       </div>
       <div class="form-group">
         <label>Pieza</label>
-        <input type="text" id="editPieza" />
+        <input data-tma-editar type="text" id="editPieza" />
       </div>
       <div class="form-group">
         <label>Pieza normalizada</label>
-        <input type="text" id="editPiezaNorm" />
+        <input data-tma-editar type="text" id="editPiezaNorm" />
       </div>
       <div class="form-group">
         <label># SAT</label>
-        <input type="text" id="editSAT" />
+        <input data-tma-editar type="text" id="editSAT" />
       </div>
       <div class="form-group">
         <label># Interno</label>
-        <input type="text" id="editInterno" />
+        <input data-tma-editar type="text" id="editInterno" />
       </div>
     </div>
     <div class="modal-footer">
       <button class="secondary" onclick="closeEditModal()">Cancelar</button>
-      <button onclick="saveEdit()">Guardar</button>
+      <button data-tma-editar onclick="saveEdit()">Guardar</button>
     </div>
   </div>
 </div>
@@ -763,6 +765,13 @@
 // ⚠️  PENDIENTE: pega aquí las 7 líneas de config de TU proyecto Firebase del SAT.
 //     (En la consola de Firebase: ⚙️ > Configuración del proyecto > Tus apps > SDK config)
 //     Mientras diga "PENDIENTE", el buscador funciona local pero SIN nube.
+// A blocked helper/SDK leaves consultation available and editing closed.
+if(!window.TMAEditor)window.TMAEditor={
+  iniciar(){const b=document.createElement('p');b.textContent='🔒 Consulta. No cargó el acceso de edición; conserva tus cambios y recarga con conexión.';document.body.prepend(b);},
+  puedeEditar:()=>false, permitir(){toast('No está disponible el acceso de edición. Recarga con conexión.','warn');return false;},
+  confirmarLectura(){}, guardar:()=>Promise.reject(new Error('Edición cerrada.'))
+};
+
 const firebaseConfig = {
   apiKey: "AIzaSyC4lCeSPFpqvyzJDUcbML4PawyMPw1AbAQ",
   authDomain: "buscado-sat.firebaseapp.com",
@@ -830,7 +839,7 @@ function conectarFirebase() {
   // Escuchar cambios en tiempo real desde cualquier compu
   fbRef.on('value', snap => {
     const data = snap.val();
-    if (!data) { subirAFirebase(); return; }            // nube vacía → sube lo local
+    if (!data) { window.TMAEditor.confirmarLectura(); return; } // esperar una acción explícita del editor
     // Ignora el eco de nuestro propio guardado
     if (data.lastWriteBy === DEVICE_ID && data.writeId === ultimoWriteId) return;
     // Los cambios vienen como texto JSON (ver subirAFirebase). Compat con formato viejo.
@@ -844,6 +853,7 @@ function conectarFirebase() {
     adds = payload.adds || [];
     deletes = payload.deletes || [];
     persist();
+    window.TMAEditor.confirmarLectura();
     updateStats();
     renderChanges();
     // Si hay una búsqueda abierta, la refresca con lo nuevo
@@ -860,14 +870,14 @@ function conectarFirebase() {
 // "# INTERNO" traen "#", y Firebase NO permite "#" en nombres de campo.
 // Metido dentro de un string, el "#" ya no molesta.
 function subirAFirebase() {
-  if (!firebaseListo) return;
+  if (!firebaseListo || !window.TMAEditor.puedeEditar()) return;
   ultimoWriteId = Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-  fbRef.set({
+  return window.TMAEditor.guardar(()=>fbRef.set({
     data: JSON.stringify({ edits, adds, deletes }),
     lastWriteBy: DEVICE_ID,
     writeId: ultimoWriteId,
     updatedAt: new Date().toISOString()
-  }).catch(err => {
+  })).catch(err => {
     console.error('Firebase write error:', err);
     setSyncStatus('error', 'Error al guardar');
     toast('Error al guardar en la nube: ' + err.message, 'error');
@@ -879,6 +889,7 @@ function autoSync() { subirAFirebase(); }
 
 // Botón manual "⚡ Sync".
 function syncNow() {
+  if(!window.TMAEditor.permitir())return;
   const btn = document.getElementById('syncBtn');
   if (!firebaseListo) { toast('La nube no está configurada todavía.', 'warn'); return; }
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
@@ -1012,6 +1023,7 @@ function generateInternalId(familia) {
 }
 
 function submitAdd() {
+  if(!window.TMAEditor.permitir())return;
   const cat = document.getElementById('addCategory').value.trim().toUpperCase();
   const fam = document.getElementById('addFamily').value.trim().toUpperCase();
   const pieza = document.getElementById('addPieza').value.trim().toUpperCase();
@@ -1050,6 +1062,7 @@ function submitAdd() {
 // EDIT MODAL
 // ============================================================
 function openEditModal(key) {
+  if(!window.TMAEditor.permitir())return;
   currentEditKey = key;
   let data = null;
 
@@ -1079,6 +1092,7 @@ function closeEditModal() {
 }
 
 function saveEdit() {
+  if(!window.TMAEditor.permitir())return;
   if (!currentEditKey) return;
 
   const data = {
@@ -1205,11 +1219,11 @@ function renderChanges() {
       </div>
       <div class="change-actions">
         ${it.type === 'deleted'
-          ? `<button class="icon-btn" onclick="restaurarBase(${it.delIdx})" title="Recuperar" style="color:var(--ok);">↺</button>`
-          : `<button class="icon-btn" onclick="openEditModal('${it.key}')" title="Editar">✏</button>` +
+          ? `<button data-tma-editar class="icon-btn" onclick="restaurarBase(${it.delIdx})" title="Recuperar" style="color:var(--ok);">↺</button>`
+          : `<button data-tma-editar class="icon-btn" onclick="openEditModal('${it.key}')" title="Editar">✏</button>` +
             (it.type === 'added'
-              ? `<button class="icon-btn" onclick="deleteAdd(${it.addIdx})" title="Eliminar" style="color:var(--danger);">🗑</button>`
-              : `<button class="icon-btn" onclick="revertEditByKey('${it.key}')" title="Revertir" style="color:var(--warn);">↺</button>`)}
+              ? `<button data-tma-editar class="icon-btn" onclick="deleteAdd(${it.addIdx})" title="Eliminar" style="color:var(--danger);">🗑</button>`
+              : `<button data-tma-editar class="icon-btn" onclick="revertEditByKey('${it.key}')" title="Revertir" style="color:var(--warn);">↺</button>`)}
       </div>
     </div>
   `).join('');
@@ -1228,6 +1242,7 @@ function load() {
 }
 
 function deleteAdd(idx) {
+  if(!window.TMAEditor.permitir())return;
   if (!confirm('¿Eliminar esta pieza? No se puede deshacer.')) return;
   adds.splice(idx, 1);
   persist();
@@ -1237,6 +1252,7 @@ function deleteAdd(idx) {
 }
 
 function revertEditByKey(key) {
+  if(!window.TMAEditor.permitir())return;
   if (!key.startsWith('b')) return;
   if (!confirm('¿Revertir a la versión original?')) return;
   const idx = parseInt(key.substring(1));
@@ -1248,6 +1264,7 @@ function revertEditByKey(key) {
 }
 
 function confirmResetAll() {
+  if(!window.TMAEditor.permitir())return;
   const total = Object.keys(edits).length + adds.length;
   if (total === 0) { toast('No hay cambios.', 'warn'); return; }
   if (!confirm(`¿Borrar TODOS los ${total} cambios locales? No se puede deshacer.`)) return;
@@ -1317,9 +1334,11 @@ function exportChanges() {
 }
 
 document.getElementById('importFile').addEventListener('change', async e => {
+  if(!window.TMAEditor.permitir())return;
   const file = e.target.files[0];
   if (!file) return;
   const text = await file.text();
+  if(!window.TMAEditor.permitir())return;
   if (file.name.endsWith('.json')) {
     try {
       const data = JSON.parse(text);
@@ -1341,6 +1360,7 @@ document.getElementById('importFile').addEventListener('change', async e => {
 });
 
 function loadBackup() {
+  if(!window.TMAEditor.permitir())return;
   document.getElementById('importFile').click();
 }
 
@@ -1480,13 +1500,13 @@ function renderAsignar() {
       let field, sugHtml = '';
       if (hasSat && !unlocked) {
         field = `<span class="asig-current">${sat}</span>
-                 <button class="asig-lock" onclick="desbloquearSat('${key}')" title="Cambiar SAT (doble candado)">🔒</button>`;
+                 <button data-tma-editar class="asig-lock" onclick="desbloquearSat('${key}')" title="Cambiar SAT (doble candado)">🔒</button>`;
       } else {
         const saveFn = hasSat ? 'guardarSatEditar' : 'guardarSatRow';
         const prefill = hasSat ? sat : (sug ? escapeHtml(sug.c) : '');
-        field = `<input id="sat-inp-${key}" type="text" inputmode="numeric" value="${prefill}" placeholder="# SAT"
+        field = `<input data-tma-editar id="sat-inp-${key}" type="text" inputmode="numeric" value="${prefill}" placeholder="# SAT"
                    onkeydown="if(event.key==='Enter'){${saveFn}('${key}')}">
-                 <button class="asig-save" onclick="${saveFn}('${key}')">✓</button>`;
+                 <button data-tma-editar class="asig-save" onclick="${saveFn}('${key}')">✓</button>`;
         if (sug) {
           const d = escapeHtml((SAT_DESC[sug.c] || '').slice(0, 32));
           sugHtml = `<div class="asig-sug ${sug.p >= 0.7 ? 'hi' : 'lo'}">💡 sugerido: <b>${escapeHtml(sug.c)}</b> · ${d} · ${Math.round(sug.p * 100)}%</div>`;
@@ -1507,6 +1527,7 @@ function renderAsignar() {
 
 // Aplica de golpe todas las sugerencias confiables (70%+) del filtro actual.
 function aceptarTodoSugerido() {
+  if(!window.TMAEditor.permitir())return;
   const target = asigActual.filter(x => !x.hasSat && x.sug && x.sug.p >= 0.7);
   if (!target.length) { toast('No hay sugerencias confiables (70%+) en este filtro.', 'warn'); return; }
   if (!confirm(`Aplicar ${target.length} códigos SAT sugeridos (confianza 70%+)?\nSe basan en tu propia base. Podrás cambiar cualquiera después con doble candado.`)) return;
@@ -1524,6 +1545,7 @@ function updateProgreso(filtro) {
 
 // Aplica el SAT a una pieza (base o agregada). silent=true → no sincroniza (para lotes).
 function applySat(key, v, silent) {
+  if(!window.TMAEditor.permitir())return;
   if (key[0] === 'b') {
     const i = parseInt(key.slice(1));
     edits[i] = Object.assign({}, edits[i], { '# SAT': v });
@@ -1536,6 +1558,7 @@ function applySat(key, v, silent) {
 
 // Guardar SAT en pieza SIN número (captura rápida: sin confirmación).
 function guardarSatRow(key) {
+  if(!window.TMAEditor.permitir())return;
   const inp = document.getElementById('sat-inp-' + key);
   if (!inp) return;
   const v = inp.value.trim();
@@ -1553,6 +1576,7 @@ function guardarSatRow(key) {
 
 // Candado 1: destrabar una pieza que YA tiene SAT.
 function desbloquearSat(key) {
+  if(!window.TMAEditor.permitir())return;
   if (!confirm('Esta pieza YA tiene número SAT.\n¿Seguro que quieres cambiarlo? (candado 1 de 2)')) return;
   asigUnlocked.add(key);
   renderAsignar();
@@ -1561,6 +1585,7 @@ function desbloquearSat(key) {
 
 // Candado 2: guardar el cambio de un SAT existente (con confirmación).
 function guardarSatEditar(key) {
+  if(!window.TMAEditor.permitir())return;
   const inp = document.getElementById('sat-inp-' + key);
   if (!inp) return;
   const v = inp.value.trim();
@@ -1628,13 +1653,13 @@ function renderDuplicados() {
           <div class="dup-pieza">${escapeHtml(r['PIEZA'] || '—')}${n === 0 ? ' <span style="font-size:11px;color:var(--ok);font-weight:700;">(1ª)</span>' : ''}</div>
           <div class="dup-meta"><b>${escapeHtml(r['# INTERNO'] || '—')}</b> · ${escapeHtml(r['FAMILIA'] || '—')} · SAT: ${escapeHtml(sat)}</div>
         </div>
-        <button class="dup-trash" onclick="borrarPiezaDup('${key}')" title="Borrar esta">🗑</button>
+        <button data-tma-editar class="dup-trash" onclick="borrarPiezaDup('${key}')" title="Borrar esta">🗑</button>
       </div>`;
     }).join('');
     return `<div class="dup-group">
       <div class="dup-ghead">
         <div><span class="dup-gtitle">${escapeHtml(items[0]['PIEZA'])}</span> <span class="dup-gcount">· ${items.length} iguales</span></div>
-        <button class="dup-keep" onclick="borrarGrupoDup('${encodeURIComponent(sig)}')">Conservar 1ª · borrar ${items.length - 1}</button>
+        <button data-tma-editar class="dup-keep" onclick="borrarGrupoDup('${encodeURIComponent(sig)}')">Conservar 1ª · borrar ${items.length - 1}</button>
       </div>
       ${rows}
     </div>`;
@@ -1655,6 +1680,7 @@ function updateDupSelCount() {
 
 // Marca una pieza como eliminada (base -> deletes; agregada -> splice).
 function eliminarKey(key, silent) {
+  if(!window.TMAEditor.permitir())return;
   if (key[0] === 'b') {
     const i = parseInt(key.slice(1));
     if (!deletes.includes(i)) deletes.push(i);
@@ -1666,6 +1692,7 @@ function eliminarKey(key, silent) {
 }
 
 function borrarPiezaDup(key) {
+  if(!window.TMAEditor.permitir())return;
   const r = getMergedData().find(x => keyDe(x) === key);
   if (!confirm(`¿Borrar "${r ? r['PIEZA'] : ''}"?\nSe puede recuperar en la pestaña Cambios.`)) return;
   eliminarKey(key);
@@ -1675,6 +1702,7 @@ function borrarPiezaDup(key) {
 }
 
 function borrarGrupoDup(sigEnc) {
+  if(!window.TMAEditor.permitir())return;
   const sig = decodeURIComponent(sigEnc);
   const items = getMergedData().filter(r => dupSig(r['PIEZA']) === sig);
   const aBorrar = items.slice(1);   // conserva la 1ª
@@ -1690,6 +1718,7 @@ function borrarGrupoDup(sigEnc) {
 }
 
 function borrarSeleccionadosDup() {
+  if(!window.TMAEditor.permitir())return;
   if (!dupSel.size) return;
   if (!confirm(`¿Borrar las ${dupSel.size} piezas seleccionadas?\nSe pueden recuperar en Cambios.`)) return;
   const keys = [...dupSel];
@@ -1703,6 +1732,7 @@ function borrarSeleccionadosDup() {
 
 // Recuperar una pieza base eliminada.
 function restaurarBase(idx) {
+  if(!window.TMAEditor.permitir())return;
   deletes = deletes.filter(d => d !== idx);
   persist(); updateStats(); autoSync();
   toast('Pieza recuperada.', 'success');
@@ -1711,6 +1741,7 @@ function restaurarBase(idx) {
 // ============================================================
 // INIT
 // ============================================================
+window.TMAEditor.iniciar(fbApp);
 load();
 populateFamilias();
 populateAsignarFamilias();
